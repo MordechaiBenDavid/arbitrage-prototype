@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>SKU Trace Viewer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro", sans-serif;
+      background: #060714;
+      color: #f5f5f5;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 40px 16px;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 900px;
+      background: radial-gradient(circle at top left, #1d2433, #0b0c16);
+      padding: 24px 24px 18px;
+      border-radius: 18px;
+      box-shadow: 0 18px 55px rgba(0, 0, 0, 0.55);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    h1 {
+      font-size: 22px;
+      margin: 0 0 4px;
+      letter-spacing: 0.02em;
+    }
+
+    .sub {
+      margin: 0 0 18px;
+      font-size: 13px;
+      color: #a6b0c3;
+    }
+
+    .search-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .search-row label {
+      font-size: 13px;
+      color: #c4cede;
+    }
+
+    .search-input {
+      flex: 1;
+      min-width: 160px;
+      padding: 8px 10px;
+      border-radius: 9px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: rgba(5, 7, 16, 0.9);
+      color: #f5f5f5;
+      font-size: 13px;
+      outline: none;
+    }
+
+    .search-input::placeholder {
+      color: #6b7280;
+    }
+
+    .btn {
+      padding: 8px 14px;
+      border-radius: 9px;
+      border: none;
+      font-size: 13px;
+      cursor: pointer;
+      background: #2563eb;
+      color: #f9fafb;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .btn:hover {
+      background: #1d4ed8;
+    }
+
+    .status-line {
+      min-height: 18px;
+      font-size: 11px;
+      color: #9ca3af;
+      margin-bottom: 6px;
+    }
+
+    .status-line strong {
+      color: #e5e7eb;
+    }
+
+    .error {
+      color: #f97373;
+    }
+
+    .pill-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 6px;
+      font-size: 10px;
+      color: #9ca3af;
+    }
+
+    .pill {
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 253, 0.25);
+      background: rgba(15, 23, 42, 0.85);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 4px;
+      font-size: 11px;
+    }
+
+    thead {
+      background: rgba(15, 23, 42, 0.96);
+    }
+
+    th, td {
+      padding: 6px 6px;
+      border-bottom: 1px solid rgba(31, 41, 55, 0.9);
+      text-align: left;
+    }
+
+    th {
+      font-weight: 500;
+      color: #9ca3af;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    tbody tr:hover {
+      background: rgba(17, 24, 39, 0.96);
+    }
+
+    .provider {
+      font-weight: 500;
+      color: #e5e7eb;
+    }
+
+    .event-type {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: rgba(79, 70, 229, 0.18);
+      color: #a5b4fc;
+      display: inline-block;
+    }
+
+    .empty-state {
+      margin-top: 6px;
+      font-size: 11px;
+      color: #6b7280;
+    }
+
+    code {
+      font-size: 10px;
+      background: rgba(15, 23, 42, 0.9);
+      padding: 2px 5px;
+      border-radius: 4px;
+      border: 1px solid rgba(75, 85, 99, 0.8);
+    }
+
+    @media (max-width: 600px) {
+      .card {
+        padding: 18px 14px 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="card">
+  <h1>SKU Trace Viewer</h1>
+  <p class="sub">
+    Enter a SKU / item ID. The app calls your <code>/item-history/{item_id}</code> API and shows
+    the movement history for that item.
+  </p>
+
+  <div class="search-row">
+    <label for="sku-input">Lookup SKU / Item ID:</label>
+    <input id="sku-input" class="search-input" type="text"
+           placeholder="e.g. SKU-123 or 1A406030000312F000001234" />
+    <button class="btn" id="search-btn">🔍 Search</button>
+  </div>
+
+  <div class="status-line" id="status"></div>
+
+  <div class="pill-row" id="summary-pills" style="display:none;"></div>
+
+  <div id="results-container">
+    <div class="empty-state" id="empty-msg">
+      No data loaded yet. Search for an SKU to view its movement history.
+    </div>
+    <table id="results-table" style="display:none;">
+      <thead>
+      <tr>
+        <th>#</th>
+        <th>Provider</th>
+        <th>Provider Ref</th>
+        <th>Event</th>
+        <th>Location</th>
+        <th>Timestamp (UTC)</th>
+      </tr>
+      </thead>
+      <tbody id="results-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  const API_BASE = "http://127.0.0.1:8000";
+
+  const skuInput = document.getElementById("sku-input");
+  const searchBtn = document.getElementById("search-btn");
+  const statusEl = document.getElementById("status");
+  const emptyMsg = document.getElementById("empty-msg");
+  const tableEl = document.getElementById("results-table");
+  const tbodyEl = document.getElementById("results-body");
+  const pillsRow = document.getElementById("summary-pills");
+
+  async function fetchItemHistory(itemId) {
+    statusEl.textContent = "Loading history for " + itemId + "...";
+    statusEl.classList.remove("error");
+
+    try {
+      const res = await fetch(`${API_BASE}/item-history/${encodeURIComponent(itemId)}`);
+      if (res.status === 404) {
+        tableEl.style.display = "none";
+        tbodyEl.innerHTML = "";
+        pillsRow.style.display = "none";
+        emptyMsg.textContent =
+          `No events found for "${itemId}". If this should exist, register sources and refresh first.`;
+        emptyMsg.style.display = "block";
+        statusEl.innerHTML = `<strong>No results.</strong>`;
+        return;
+      }
+      if (!res.ok) {
+        throw new Error(`API error: ${res.status}`);
+      }
+
+      const data = await res.json();
+      renderResults(itemId, data);
+    } catch (err) {
+      console.error(err);
+      statusEl.textContent = "Error loading data. Is the backend running?";
+      statusEl.classList.add("error");
+      tableEl.style.display = "none";
+      pillsRow.style.display = "none";
+      emptyMsg.textContent = "Backend not reachable or unexpected error.";
+      emptyMsg.style.display = "block";
+    }
+  }
+
+  function renderResults(itemId, events) {
+    if (!Array.isArray(events) || events.length === 0) {
+      tableEl.style.display = "none";
+      tbodyEl.innerHTML = "";
+      pillsRow.style.display = "none";
+      emptyMsg.textContent = `No events found for "${itemId}".`;
+      emptyMsg.style.display = "block";
+      return;
+    }
+
+    events.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+    const providers = [...new Set(events.map(e => e.provider))];
+    const last = events[events.length - 1];
+
+    pillsRow.innerHTML = `
+      <div class="pill"><strong>Item:</strong> ${itemId}</div>
+      <div class="pill"><strong>Providers:</strong> ${providers.join(", ")}</div>
+      <div class="pill"><strong>Events:</strong> ${events.length}</div>
+      <div class="pill"><strong>Last Seen:</strong> ${last.location || "Unknown"}</div>
+    `;
+    pillsRow.style.display = "flex";
+
+    tbodyEl.innerHTML = events
+      .map((e, idx) => `
+        <tr>
+          <td>${idx + 1}</td>
+          <td class="provider">${e.provider}</td>
+          <td>${e.provider_ref || ""}</td>
+          <td><span class="event-type">${e.event_type}</span></td>
+          <td>${e.location || ""}</td>
+          <td>${e.timestamp}</td>
+        </tr>
+      `)
+      .join("");
+
+    emptyMsg.style.display = "none";
+    tableEl.style.display = "table";
+    statusEl.innerHTML = `<strong>Showing ${events.length}</strong> events for <strong>${itemId}</strong>.`;
+    statusEl.classList.remove("error");
+  }
+
+  searchBtn.addEventListener("click", () => {
+    const value = skuInput.value.trim();
+    if (!value) {
+      statusEl.textContent = "Please enter an item ID.";
+      statusEl.classList.add("error");
+      return;
+    }
+    fetchItemHistory(value);
+  });
+
+  skuInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      searchBtn.click();
+    }
+  });
+</script>
+</body>
+</html>
