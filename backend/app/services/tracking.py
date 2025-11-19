@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import List, Optional
 
 from sqlmodel import Session, select
+from sqlalchemy.orm import selectinload
 
 from app.db.session import engine
 from app.models import Sku, SkuEvent, SkuIdentity
@@ -87,5 +88,9 @@ def get_sku_timeline(sku_id: int) -> Optional[TimelineResponse]:
 def search_skus(query: str) -> List[Sku]:
     # Placeholder implementation until OpenSearch is wired.
     with get_session() as session:
-        statement = select(Sku).where(Sku.name.ilike(f"%{query}%"))
+        statement = (
+            select(Sku)
+            .where(Sku.name.ilike(f"%{query}%"))
+            .options(selectinload(Sku.identities))
+        )
         return session.exec(statement).all()
