@@ -5,11 +5,23 @@ services:
     build: ./backend
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     environment:
-      DATABASE_URL: postgresql+psycopg://app:app@db:5432/sku_lifecycle
+      DATABASE_URL: postgresql+psycopg://app:app@localhost:5433/sku_lifecycle
       REDIS_URL: redis://redis:6379/0
       OPENSEARCH_HOST: http://opensearch:9200
       JWT_SECRET_KEY: changeme
       CORS_ORIGINS: http://localhost:3000
+      FEDEX_CLIENT_ID: ${FEDEX_CLIENT_ID:-}
+      FEDEX_CLIENT_SECRET: ${FEDEX_CLIENT_SECRET:-}
+      FEDEX_BASE_URL: ${FEDEX_BASE_URL:-https://apis.fedex.com}
+      UPS_CLIENT_ID: ${UPS_CLIENT_ID:-}
+      UPS_CLIENT_SECRET: ${UPS_CLIENT_SECRET:-}
+      UPS_BASE_URL: ${UPS_BASE_URL:-https://onlinetools.ups.com}
+      USPS_USER_ID: ${USPS_USER_ID:-}
+      USPS_BASE_URL: ${USPS_BASE_URL:-https://secure.shippingapis.com/ShippingAPI.dll}
+      UPCITEMDB_API_KEY: ${UPCITEMDB_API_KEY:-}
+      UPCITEMDB_BASE_URL: ${UPCITEMDB_BASE_URL:-https://api.upcitemdb.com}
+      BARCODE_LOOKUP_API_KEY: ${BARCODE_LOOKUP_API_KEY:-}
+      BARCODE_LOOKUP_BASE_URL: ${BARCODE_LOOKUP_BASE_URL:-https://api.barcodelookup.com/v3}
     volumes:
       - ./backend/app:/app/app
     ports:
@@ -26,7 +38,7 @@ services:
       POSTGRES_PASSWORD: app
       POSTGRES_DB: sku_lifecycle
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
 

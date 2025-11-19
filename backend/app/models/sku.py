@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
+from sqlalchemy import Column, JSON
 from sqlmodel import Field, Relationship, SQLModel
 
 
@@ -38,8 +39,11 @@ class SkuEventBase(SQLModel):
     event_type: str
     provider: str
     location: Optional[str] = Field(default=None)
-    payload: dict = Field(sa_column_kwargs={"nullable": False, "default": {}})
-    raw_payload: Optional[dict] = None
+    payload: dict = Field(default_factory=dict, sa_column=Column(JSON, nullable=False))
+    raw_payload: Optional[dict] = Field(
+        default=None,
+        sa_column=Column(JSON, nullable=True),
+    )
     observed_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
     confidence: float = Field(default=1.0)
 

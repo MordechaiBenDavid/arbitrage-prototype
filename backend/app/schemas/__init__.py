@@ -7,6 +7,12 @@ from .sku import (
     SkuEventRead,
     TimelineResponse,
 )
+from .connector import (
+    TrackShipmentRequest,
+    TrackShipmentResponse,
+    CatalogLookupRequest,
+    CatalogLookupResponse,
+)
 
 __all__ = [
     "SkuCreate",
@@ -16,4 +22,8 @@ __all__ = [
     "SkuEventCreate",
     "SkuEventRead",
     "TimelineResponse",
+    "TrackShipmentRequest",
+    "TrackShipmentResponse",
+    "CatalogLookupRequest",
+    "CatalogLookupResponse",
 ]

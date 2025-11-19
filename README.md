@@ -66,11 +66,27 @@ The Next.js app ships with:
 - SKU search (temporary Postgres `ILIKE` search until OpenSearch sync is implemented)
 - Timeline view showing inferred status + last known location
 
+### External connectors
+
+The backend exposes `/api/v1/connectors/track` (FedEx, UPS, USPS) and `/api/v1/connectors/catalog` (UPCItemDB, Barcode Lookup) endpoints to import real-world data. Configure the following environment variables inside `backend/.env` before using them:
+
+```
+FEDEX_CLIENT_ID=...
+FEDEX_CLIENT_SECRET=...
+UPS_CLIENT_ID=...
+UPS_CLIENT_SECRET=...
+USPS_USER_ID=...
+UPCITEMDB_API_KEY=...
+BARCODE_LOOKUP_API_KEY=...
+```
+
+Once credentials are in place you can trigger a tracking ingest by POSTing `{"sku_id": 1, "tracking_number": "...", "provider": "fedex"}` to `/api/v1/connectors/track`, or enrich catalog data by POSTing `{"identifier": "0123456789012", "provider": "upcitemdb"}` to `/api/v1/connectors/catalog`. Integrate these calls with your ingestion worker or invoke them manually via the FastAPI docs UI.
+
 ## Next Steps
 
 - Finish auth (JWT issuing/verification + role policies).
 - Implement OpenSearch indexing + dedicated `/search` resolver.
 - Add Alembic migrations + TimescaleDB hypertables for `sku_events`.
-- Wire ingestion connectors into Redis queues and persist normalized events.
+- Wire ingestion connectors (FedEx/UPS/USPS tracking + UPCItemDB/Barcode Lookup enrichers) into Redis queues and persist normalized events.
 - Harden deployment (Render/Fly deploy files, CI/CD, monitoring).
 >>>>>>> dfe725e (project base)
